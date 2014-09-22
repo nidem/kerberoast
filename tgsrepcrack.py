@@ -48,7 +48,8 @@ if __name__ == '__main__':
 	parser.add_argument('wordlistfile', action='store',
 					metavar='dictionary.txt', type=argparse.FileType('r'), 
 					help='the word list to use with password cracking')
-	parser.add_argument('files', nargs='+', help='File name to list. Use asterisk \'*\' for many files.\n Files are exported with mimikatz or from extracttgsrepfrompcap.py')
+	parser.add_argument('files', nargs='+', metavar='file.kirbi',
+					help='File name to crack. Use asterisk \'*\' for many files.\n Files are exported with mimikatz or from extracttgsrepfrompcap.py')
 	parser.add_argument('-t', '--threads', dest='threads', action='store', required=False, 
 					metavar='NUM', type=int, default=5,
 					help='Number of threads for guessing')
