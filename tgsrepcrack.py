@@ -45,19 +45,13 @@ if __name__ == '__main__':
 	import argparse
 
 	parser = argparse.ArgumentParser(description='Read kerberos ticket then modify it')
-	parser.add_argument('-w', '--wordlist', dest='wordlistfile', action='store', required=True, 
+	parser.add_argument('wordlistfile', action='store',
 					metavar='dictionary.txt', type=argparse.FileType('r'), 
 					help='the word list to use with password cracking')
-	parser.add_argument('files', nargs='+', help='File name to list. Use asterisk \'*\' for many files')
+	parser.add_argument('files', nargs='+', help='File name to list. Use asterisk \'*\' for many files.\n Files are exported with mimikatz or from extracttgsrepfrompcap.py')
 	parser.add_argument('-t', '--threads', dest='threads', action='store', required=False, 
 					metavar='NUM', type=int, default=5,
 					help='Number of threads for guessing')
-	#parser.add_argument('files', action='store', nargs='+', #required=False, 
-	#				metavar='INFILE.kirbi', type=file, 
-	#				help='the file containing the kerberos ticket (exported with mimikatz) or export from extracttgsrepfrompcap.py')
-	#parser.add_argument('-t', '--enctype', dest='enctype', action='store', required=False, default=2, 
-	#				metavar='2', type=int, 
-	#				help='message type, from RAM it is 2 (This should not need to be changed)')
 	
 	args = parser.parse_args()
 
