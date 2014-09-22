@@ -41,7 +41,7 @@ if __name__ == '__main__':
 	import argparse
 
 	parser = argparse.ArgumentParser(description='Read kerberos ticket then modify it')
-	parser.add_argument('-r', '--readfile', dest='infile', action='store', required=True, 
+	parser.add_argument('-r', '--readfile', dest='infiles', action='append', required=True, 
 					metavar='INFILE', type=argparse.FileType('r'), 
 					help='the file containing the kerberos ticket (exported with mimikatz) or export from extracttgsrepfrompcap.py')
 	parser.add_argument('-w', '--wordlist', dest='wordlistfile', action='store', required=True, 
@@ -72,18 +72,19 @@ if __name__ == '__main__':
 	#enctickets = []
 	manager = Manager()
 	enctickets = manager.list()
-	data = args.infile.read()
+	for f in args.infiles:
+		data = f.read()
 
-	if data[0] == '\x76':
-		# rem dump 
-		enctickets.append((str(decoder.decode(data)[0][2][0][3][2]), 0))
-	elif data[:2] == '6d':
-		i = 0
-		for ticket in data.strip().split('\n'):
-			#print str(decoder.decode(ticket.decode('hex'))[0][4][3][2])#[0][4][3][2]
-			#exit()
-			enctickets.append((str(decoder.decode(ticket.decode('hex'))[0][4][3][2]), i))
-			i += 1
+		if data[0] == '\x76':
+			# rem dump 
+			enctickets.append((str(decoder.decode(data)[0][2][0][3][2]), 0))
+		elif data[:2] == '6d':
+			i = 0
+			for ticket in data.strip().split('\n'):
+				#print str(decoder.decode(ticket.decode('hex'))[0][4][3][2])#[0][4][3][2]
+				#exit()
+				enctickets.append((str(decoder.decode(ticket.decode('hex'))[0][4][3][2]), i))
+				i += 1
 
 	#crack(wordlist)
 
