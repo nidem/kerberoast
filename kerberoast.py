@@ -241,7 +241,7 @@ if __name__ == '__main__':
 					metavar='INFILE.kirbi', type=argparse.FileType('r'), 
 					help='the file containing the kerberos ticket exported with mimikatz')
 	parser.add_argument('-w', '--outputfile', dest='outfile', action='store', required=True, 
-					metavar='OUTFILE.kirbi', type=argparse.FileType('w'), 
+					metavar='OUTFILE.kirbi', type=argparse.FileType('wb'), 
 					help='the output file, wite hash for john the ripper to crack')
 	parser.add_argument('-p', '--password', dest='password', action='store', required=False, 
 					metavar='P@ss0rd1', type=str, 

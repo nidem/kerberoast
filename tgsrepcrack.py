@@ -11,9 +11,9 @@ enctickets = None
 
 
 def loadwordlist(wordlistfile, wordlistqueue, threadcount):
-	for w in wordlistfile.xreadlines():
-		wordlistqueue.put(w.strip(), True)
-	wordlistfile.close()
+	with open(wordlistfile, 'r') as f:
+		for w in f.xreadlines():
+			wordlistqueue.put(w.strip(), True)
 	for i in range(threadcount):
 		wordlist.put('ENDOFQUEUEENDOFQUEUEENDOFQUEUE')
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Read kerberos ticket then modify it')
 	parser.add_argument('wordlistfile', action='store',
-					metavar='dictionary.txt', type=argparse.FileType('r'), 
+					metavar='dictionary.txt', type=file, # windows closes it in thread
 					help='the word list to use with password cracking')
 	parser.add_argument('files', nargs='+', metavar='file.kirbi',
 					help='File name to crack. Use asterisk \'*\' for many files.\n Files are exported with mimikatz or from extracttgsrepfrompcap.py')
@@ -59,7 +59,8 @@ if __name__ == '__main__':
 	if args.threads < 1:
 		raise ValueError("Number of threads is too small")
 
-	p = Process(target=loadwordlist, args=(args.wordlistfile, wordlist, args.threads))
+
+	p = Process(target=loadwordlist, args=(args.wordlistfile.name, wordlist, args.threads))
 	p.start()
 
 	
@@ -92,6 +93,7 @@ if __name__ == '__main__':
 
 	#crack(wordlist)
 
+	'''
 	crackers = []
 	for i in range(args.threads):
 		p = Process(target=crack, args=(wordlist,))
@@ -102,6 +104,8 @@ if __name__ == '__main__':
 		p.join()
 
 	wordlist.close()
+	'''
+	crack(wordlist)
 
 	if len(enctickets):
 		print "Unable to crack %i tickets" % len(enctickets)
