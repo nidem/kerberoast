@@ -11,16 +11,14 @@ enctickets = None
 
 
 def loadwordlist(wordlistfile, wordlistqueue, threadcount):
-	with open(wordlistfile, 'r') as f:
+	with open(wordlistfile, 'rb') as f:
 		for w in f.xreadlines():
 			wordlistqueue.put(w.strip(), True)
 	for i in range(threadcount):
 		wordlist.put('ENDOFQUEUEENDOFQUEUEENDOFQUEUE')
 
 
-def crack(wordlist):
-	global enctickets
-
+def crack(wordlist, enctickets):
 	toremove = []
 	while enctickets:
 		word = wordlist.get()
@@ -39,7 +37,6 @@ def crack(wordlist):
 				return
 			if not enctickets:
 				return
-					#print kdata.encode('hex')
 
 if __name__ == '__main__':
 	import argparse
@@ -64,39 +61,31 @@ if __name__ == '__main__':
 	p.start()
 
 	
-	#data = args.infile.read()
-	#args.infile.close()
-
 	# is this a dump from extactrtgsrepfrompcap.py or a dump from ram (mimikatz)
 
-	#enctickets = []
 	manager = Manager()
 	enctickets = manager.list()
 
 	i = 0
 	for path in args.files:
 		for f in glob.glob(path):
-			with open(f, 'r') as fd:
+			with open(f, 'rb') as fd:
 				data = fd.read()
 			#data = open('f.read()
 
 			if data[0] == '\x76':
 				# rem dump 
 				enctickets.append((str(decoder.decode(data)[0][2][0][3][2]), i, f))
+				print len(str(decoder.decode(data)[0][2][0][3][2]))
 				i += 1
 			elif data[:2] == '6d':
 				for ticket in data.strip().split('\n'):
-					#print str(decoder.decode(ticket.decode('hex'))[0][4][3][2])#[0][4][3][2]
-					#exit()
 					enctickets.append((str(decoder.decode(ticket.decode('hex'))[0][4][3][2]), i, f))
 					i += 1
 
-	#crack(wordlist)
-
-	'''
 	crackers = []
 	for i in range(args.threads):
-		p = Process(target=crack, args=(wordlist,))
+		p = Process(target=crack, args=(wordlist,enctickets))
 		p.start()
 		crackers.append(p)
 
@@ -104,8 +93,6 @@ if __name__ == '__main__':
 		p.join()
 
 	wordlist.close()
-	'''
-	crack(wordlist)
 
 	if len(enctickets):
 		print "Unable to crack %i tickets" % len(enctickets)

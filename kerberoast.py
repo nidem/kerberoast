@@ -238,7 +238,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Read kerberos ticket then modify it')
 	parser.add_argument('-r', '--readfile', dest='infile', action='store', required=True, 
-					metavar='INFILE.kirbi', type=argparse.FileType('r'), 
+					metavar='INFILE.kirbi', type=argparse.FileType('rb'), 
 					help='the file containing the kerberos ticket exported with mimikatz')
 	parser.add_argument('-w', '--outputfile', dest='outfile', action='store', required=True, 
 					metavar='OUTFILE.kirbi', type=argparse.FileType('wb'), 
