@@ -15,7 +15,7 @@ def loadwordlist(wordlistfile, wordlistqueue, threadcount):
 		for w in f.xreadlines():
 			wordlistqueue.put(w.strip(), True)
 	for i in range(threadcount):
-		wordlist.put('ENDOFQUEUEENDOFQUEUEENDOFQUEUE')
+		wordlistqueue.put('ENDOFQUEUEENDOFQUEUEENDOFQUEUE')
 
 
 def crack(wordlist, enctickets):
@@ -76,7 +76,6 @@ if __name__ == '__main__':
 			if data[0] == '\x76':
 				# rem dump 
 				enctickets.append((str(decoder.decode(data)[0][2][0][3][2]), i, f))
-				print len(str(decoder.decode(data)[0][2][0][3][2]))
 				i += 1
 			elif data[:2] == '6d':
 				for ticket in data.strip().split('\n'):

