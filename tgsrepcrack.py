@@ -13,7 +13,7 @@ enctickets = None
 def loadwordlist(wordlistfile, wordlistqueue, threadcount):
 	with open(wordlistfile, 'rb') as f:
 		for w in f.xreadlines():
-			wordlistqueue.put(w.strip(), True)
+			wordlistqueue.put(w.decode('utf-8').strip(), True)
 	for i in range(threadcount):
 		wordlistqueue.put('ENDOFQUEUEENDOFQUEUEENDOFQUEUE')
 
