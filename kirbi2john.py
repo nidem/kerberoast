@@ -49,5 +49,5 @@ if __name__ == '__main__':
 
 	out=open("crack_file","wb")
 	for et in enctickets:
-		out.write("$krb5tgs$unkown:"+et[0][:16].encode("hex")+"$"+et[0][16:].encode("hex")+"\n")
+		out.write("$krb5tgs$" + et[2] + ":"+et[0][:16].encode("hex")+"$"+et[0][16:].encode("hex")+"\n")
 	out.close
