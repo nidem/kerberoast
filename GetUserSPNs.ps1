@@ -15,6 +15,8 @@ Param(
   [Parameter(Mandatory=$False)] [string]$Filter
 )
 
+Add-Type -AssemblyName System.IdentityModel
+
 $GCs = @()
 
 If ($GCName) {
