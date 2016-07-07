@@ -7,14 +7,16 @@
 #           a crackable password. This tool will find those accounts. You do not
 #           need any special local or domain permissions to run this script. 
 #           This script on a script supplied by Microsoft (details below).
-# History:  2014/11/12     Tim Medin    Created
+# History:  2016/07/07     Tim Medin    Add -UniqueAccounts parameter to only get unique SAMAccountNames
 #           2016/04/12     Tim Medin    Added -Request option to automatically get the tickets
+#           2014/11/12     Tim Medin    Created
 
 [CmdletBinding()]
 Param(
   [Parameter(Mandatory=$False,Position=1)] [string]$GCName,
   [Parameter(Mandatory=$False)] [string]$Filter,
-  [Parameter(Mandatory=$False)] [switch]$Request
+  [Parameter(Mandatory=$False)] [switch]$Request,
+  [Parameter(Mandatory=$False)] [switch]$UniqueAccounts
 )
 
 Add-Type -AssemblyName System.IdentityModel
@@ -94,10 +96,12 @@ ForEach ($GC in $GCs) {
     $searcher.SearchScope = "Subtree"
 
     $results = $searcher.FindAll()
+    
+    [System.Collections.ArrayList]$accounts = @()
         
     foreach ($result in $results) {
         foreach ($spn in $result.Properties["serviceprincipalname"]) {
-            Select-Object -InputObject $result -Property `
+            $o = Select-Object -InputObject $result -Property `
                 @{Name="ServicePrincipalName"; Expression={$spn.ToString()} }, `
                 @{Name="Name";                 Expression={$result.Properties["name"][0].ToString()} }, `
                 #@{Name="UserPrincipalName";   Expression={$result.Properties["userprincipalname"][0].ToString()} }, `
@@ -106,9 +110,20 @@ ForEach ($GC in $GCs) {
                 @{Name="MemberOf";             Expression={$result.Properties["memberof"][0].ToString()} }, `
                 @{Name="PasswordLastSet";      Expression={[datetime]::fromFileTime($result.Properties["pwdlastset"][0])} } #, `
                 #@{Name="DistinguishedName";   Expression={$result.Properties["distinguishedname"][0].ToString()} }
-            if ($Request) {
-              New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $spn.ToString()
+            if ($UniqueAccounts) {
+                if (-not $accounts.Contains($result.Properties["samaccountname"][0].ToString())) {
+                    $accounts.Add($result.Properties["samaccountname"][0].ToString()) | Out-Null
+                    $o
+                    if ($Request) {
+                        New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $spn.ToString() | Out-Null
+                    }
+                }
+            } else {
+                $o
+                if ($Request) {
+                    New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $spn.ToString() | Out-Null
+                }
             }
-          }
+        }
     }
 }
