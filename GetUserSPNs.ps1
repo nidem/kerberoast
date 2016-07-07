@@ -84,6 +84,7 @@ ForEach ($GC in $GCs) {
     $searcher.Filter = "(&(!objectClass=computer)(servicePrincipalName=*))"
     $searcher.PropertiesToLoad.Add("serviceprincipalname") | Out-Null
     $searcher.PropertiesToLoad.Add("name") | Out-Null
+    $searcher.PropertiesToLoad.Add("samaccountname") | Out-Null
     #$searcher.PropertiesToLoad.Add("userprincipalname") | Out-Null
     #$searcher.PropertiesToLoad.Add("displayname") | Out-Null
     $searcher.PropertiesToLoad.Add("memberof") | Out-Null
@@ -99,11 +100,12 @@ ForEach ($GC in $GCs) {
             Select-Object -InputObject $result -Property `
                 @{Name="ServicePrincipalName"; Expression={$spn.ToString()} }, `
                 @{Name="Name";                 Expression={$result.Properties["name"][0].ToString()} }, `
-                #@{Name="UserPrincipalName";    Expression={$result.Properties["userprincipalname"][0].ToString()} }, `
-                #@{Name="DisplayName";          Expression={$result.Properties["displayname"][0].ToString()} }, `
+                #@{Name="UserPrincipalName";   Expression={$result.Properties["userprincipalname"][0].ToString()} }, `
+                @{Name="SAMAccountName";       Expression={$result.Properties["samaccountname"][0].ToString()} }, `
+                #@{Name="DisplayName";         Expression={$result.Properties["displayname"][0].ToString()} }, `
                 @{Name="MemberOf";             Expression={$result.Properties["memberof"][0].ToString()} }, `
                 @{Name="PasswordLastSet";      Expression={[datetime]::fromFileTime($result.Properties["pwdlastset"][0])} } #, `
-                #@{Name="DistinguishedName";    Expression={$result.Properties["distinguishedname"][0].ToString()} }
+                #@{Name="DistinguishedName";   Expression={$result.Properties["distinguishedname"][0].ToString()} }
             if ($Request) {
               New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $spn.ToString()
             }
