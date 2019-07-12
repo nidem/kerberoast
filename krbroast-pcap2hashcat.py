@@ -31,8 +31,6 @@ def findkerbpayloads(packets, verbose=False):
 			except:
 				continue
 
-			print(payload)
-
 			if len(payload) > MESSAGETYPEOFFSETTCP and payload[MESSAGETYPEOFFSETTCP] == TGS_REP:
 				# found start of new TGS-REP
 				size = struct.unpack(">I", payload[:4])[0]
@@ -94,4 +92,3 @@ if __name__ == '__main__':
 			args.outfile.write(out + '\n')
 		else:
 			print(out)
-		sys.exit()
