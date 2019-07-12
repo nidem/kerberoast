@@ -23,18 +23,23 @@ def findkerbpayloads(packets, verbose=False):
 		elif p.haslayer(TCP) and p.sport == 88 and p[TCP].flags & 23== 16: #ACK Only, ignore push (8), urg (32), and ECE (64+128)
 			# assumes that each TCP packet contains the full payload
 
-			if len(p[TCP].load) > MESSAGETYPEOFFSETTCP and p[TCP].load[MESSAGETYPEOFFSETTCP] == TGS_REP:
+			try:
+				payload = p[TCP].load
+			except:
+				continue
+
+			if len(payload) > MESSAGETYPEOFFSETTCP and payload[MESSAGETYPEOFFSETTCP] == TGS_REP:
 				# found start of new TGS-REP
-				size = struct.unpack(">I", p[TCP].load[:4])[0]
-				if size + 4 == len(p[TCP].load):
-					kploads.append(p[TCP].load[4:size+4]) # strip the size field
+				size = struct.unpack(">I", payload[:4])[0]
+				if size + 4 == len(payload):
+					kploads.append(payload[4:size+4]) # strip the size field
 				else:
-					#print 'ERROR: Size is incorrect: %i vs %i' % (size, len(p[TCP].load))
-					unfinished[(p[IP].src, p[IP].dst, p[TCP].dport)] = (p[TCP].load[4:size+4], size)
+					#print 'ERROR: Size is incorrect: %i vs %i' % (size, len(payload))
+					unfinished[(p[IP].src, p[IP].dst, p[TCP].dport)] = (payload[4:size+4], size)
 				if verbose: print "found TCP payload of size %i" % size
 			elif unfinished.has_key((p[IP].src, p[IP].dst, p[TCP].dport)):
 				ticketdata, size = unfinished.pop((p[IP].src, p[IP].dst, p[TCP].dport))
-				ticketdata += p[TCP].load
+				ticketdata += payload
 				#print "cont: %i %i" % (len(ticketdata), size)
 				if len(ticketdata) == size:
 					kploads.append(ticketdata)
