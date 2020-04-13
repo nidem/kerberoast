@@ -1,4 +1,4 @@
-#!/usr/local/bin/python2 -tt
+#!/usr/bin/env python3 -tt
 
 import kerberos
 from pyasn1.codec.ber import encoder, decoder
@@ -6,17 +6,17 @@ from pyasn1.type import univ, useful
 import struct
 import datetime
 import re
-import PAC
+import pac
 
 
 def walk(t):
 	if type(t) == str:
-		print 'String: %s' % t
+		print('String: %s' % t)
 	else:
-		print 'Length: %i' % len(t)
+		print('Length: %i' % len(t))
 		for i in range(len(t)):
-			print '---%i---' % i
-			print t[i]
+			print('---%i---' % i)
+			print(t[i])
 
 
 #Sequence().setComponentByPosition(0, BitString("'01000000101000010000000000000000'B")).setComponentByPosition(1, Sequence().setComponentByPosition(0, Integer(23)).setComponentByPosition(1, OctetString(hexValue='dfa121845d72f43271bbb33cd9e69443'))).setComponentByPosition(2, GeneralString('MEDIN.LOCAL')).setComponentByPosition(3, Sequence().setComponentByPosition(0, Integer(1)).setComponentByPosition(1, Sequence().setComponentByPosition(0, GeneralString('tm')))).setComponentByPosition(4, Sequence().setComponentByPosition(0, Integer(1)).setComponentByPosition(1, OctetString(''))).setComponentByPosition(5, GeneralizedTime('20140403172846Z')).setComponentByPosition(6, GeneralizedTime('20140403173119Z'))
@@ -58,7 +58,7 @@ def updateusernameinencpart(key, rawticket, username, debug=False, verbose=False
 		encserverticket = serverticket.getComponentByPosition(0).getComponentByPosition(3).getComponentByPosition(2).asOctets()
 	except:
 		raise ValueError('Unable to decode ticket. Invalid file.')
-	if verbose: print 'Ticket succesfully decoded'
+	if verbose: print('Ticket succesfully decoded')
 
 	decserverticketraw, nonce = kerberos.decrypt(key, 2, encserverticket)
 
@@ -86,14 +86,14 @@ def getpac(key, rawticket, debug=False, verbose=False):
 		encserverticket = serverticket.getComponentByPosition(0).getComponentByPosition(3).getComponentByPosition(2).asOctets()
 	except:
 		raise ValueError('Unable to decode ticket. Invalid file.')
-	if verbose: print 'Ticket succesfully decoded'
+	if verbose: print('Ticket succesfully decoded')
 
 	decserverticketraw, nonce = kerberos.decrypt(key, 2, encserverticket)
 
 	if decserverticketraw == None:
 		raise ValueError('Unable to decrypt ticket. Invalid key.')
 	elif verbose:
-		print 'Decryption successful'
+		print('Decryption successful')
 
 	
 	decserverticket, extra = decoder.decode(decserverticketraw)
@@ -118,14 +118,14 @@ def updatepac(key, rawticket, pac, debug=False, verbose=False):
 		encserverticket = serverticket.getComponentByPosition(0).getComponentByPosition(3).getComponentByPosition(2).asOctets()
 	except:
 		raise ValueError('Unable to decode ticket. Invalid file.')
-	if verbose: print 'Ticket succesfully decoded'
+	if verbose: print('Ticket succesfully decoded')
 
 	decserverticketraw, nonce = kerberos.decrypt(key, 2, encserverticket)
 
 	if decserverticketraw == None:
 		raise ValueError('Unable to decrypt ticket. Invalid key.')
 	elif verbose:
-		print 'Decryption successful'
+		print('Decryption successful')
 
 	
 	decserverticket, extra = decoder.decode(decserverticketraw)
@@ -211,7 +211,7 @@ if __name__ == '__main__':
 	elif args.nthash != None:
 		key = args.nthash.decode('hex')
 	else:
-		print "You must provide either the password (-p) or the hash (-n)"
+		print("You must provide either the password (-p) or the hash (-n)")
 		exit(1)
 
 	# read the ticket from the file

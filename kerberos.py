@@ -1,4 +1,4 @@
-#!/usr/local/bin/python2 -tt
+#!/usr/bin/env python3 -tt
 
 import hashlib
 import hmac
@@ -31,7 +31,7 @@ def ntlmhash(s):
 
 def rc4crypt(key, data):
     x = 0
-    box = range(256)
+    box = list(range(256))
     for i in range(256):
         x = (x + box[i] + ord(key[i % len(key)])) % 256
         box[i], box[x] = box[x], box[i]
@@ -125,7 +125,7 @@ def encrypt(key, messagetype, data, nonce):
     return checksum + edata
 
 def zerosigs(data):
-    d = map(ord, data)
+    d = list(map(ord, data))
     for i in range(5, 21): # zero out the 16 char sig, KDC
         d[len(d) - i] = 0
     for i in range(29, 45): # zero out the 16 char sig, Server
@@ -162,19 +162,19 @@ def printdecode(kerbpayload, ktype=2):
     d = decoder.decode(kerbpayload)
     if ktype == 32:
         #print "Protocol Version (pvno):  " + str(d[0][0])
-        print "Message Type:             " + str(d[0][1])
-        print "Realm:                    " + str(d[0][2])
-        print "Principal:                " + str(d[0][3][1][0])
-        print "Ticket Version (tkt-vno): " + str(d[0][4][0])
-        print "Ticket Realm:             " + str(d[0][4][1])
+        print("Message Type:             " + str(d[0][1]))
+        print("Realm:                    " + str(d[0][2]))
+        print("Principal:                " + str(d[0][3][1][0]))
+        print("Ticket Version (tkt-vno): " + str(d[0][4][0]))
+        print("Ticket Realm:             " + str(d[0][4][1]))
         #print "Name-Type (Service & Instance): " + str(d[0][4][2][0])
-        print "Server, Name:             " + str(d[0][4][2][1][0])
-        print "Server, Name:             " + str(d[0][4][2][1][1])
+        print("Server, Name:             " + str(d[0][4][2][1][0]))
+        print("Server, Name:             " + str(d[0][4][2][1][1]))
         #print "Data:                     " + str(d[0][4][3][2]).encode('hex')
 
         #print "Encryption Type: :        " + str(d[0][5][0])
         #print "Data:                     " + str(d[0])
         #print "Server Realm:             " + str(d[0][4][2][4])
     elif ktype == 2:
-        print "a"
+        print("a")
 

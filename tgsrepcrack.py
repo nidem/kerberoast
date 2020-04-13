@@ -1,4 +1,4 @@
-#!/usr/local/bin/python2 -tt
+#!/usr/bin/env python3 -tt
 
 import kerberos
 from pyasn1.codec.ber import encoder, decoder
@@ -12,7 +12,7 @@ enctickets = None
 
 def loadwordlist(wordlistfile, wordlistqueue, threadcount):
 	with open(wordlistfile, 'rb') as f:
-		for w in f.xreadlines():
+		for w in f:
 			wordlistqueue.put(w.decode('utf-8').strip(), True)
 	for i in range(threadcount):
 		wordlistqueue.put('ENDOFQUEUEENDOFQUEUEENDOFQUEUE')
@@ -28,7 +28,7 @@ def crack(wordlist, enctickets):
 		for et in enctickets:
 			kdata, nonce = kerberos.decrypt(kerberos.ntlmhash(word), 2, et[0])
 			if kdata:
-				print 'found password for ticket %i: %s  File: %s' % (et[1], word, et[2])
+				print('found password for ticket %i: %s  File: %s' % (et[1], word, et[2]))
 				toremove.append(et)
 		for et in toremove:
 			try:
@@ -94,6 +94,6 @@ if __name__ == '__main__':
 	wordlist.close()
 
 	if len(enctickets):
-		print "Unable to crack %i tickets" % len(enctickets)
+		print("Unable to crack %i tickets" % len(enctickets))
 	else:
-		print "All tickets cracked!"
+		print("All tickets cracked!")

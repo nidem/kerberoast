@@ -1,4 +1,4 @@
-#!/usr/local/bin/python2 -tt
+#!/usr/bin/env python3 -tt
 
 import struct
 import collections
@@ -29,12 +29,12 @@ def TimeToBytes(time):
 	else:
 		td = time - datetime.datetime(1601,1,1)
 		#seconds = math.floor(td.total_seconds())
-		hundredsofnano = long(math.floor(td.total_seconds()) * 10000000)
+		hundredsofnano = int(math.floor(td.total_seconds()) * 10000000)
 
 		if hasattr(time, 'nanosecond'):
-			hundredsofnano += long(time.nanosecond / 100)
+			hundredsofnano += int(time.nanosecond / 100)
 		else:
-			hundredsofnano += long(time.microseconds * 10)
+			hundredsofnano += int(time.microseconds * 10)
 
 		return struct.pack('<Q', hundredsofnano)
 
@@ -97,9 +97,7 @@ class datetimenano(datetime.datetime):
 		return '%s.%09i' % (s.split('.')[0], self.nanosecond)
 		return s
 
-class PacInfoStructure(object):
-	__metaclass__ = ABCMeta
-
+class PacInfoStructure(object, metaclass=ABCMeta):
 	PrettyName = 'PacInfoStructure'
 
 	Type = None
@@ -505,11 +503,11 @@ class PAC(object):
 				self.PacKdcChecksum = pis
 
 			if pis.Data != pis.encode():
-				print "NO MATCH!! %s" % pis.PrettyName
+				print("NO MATCH!! %s" % pis.PrettyName)
 
 				cmp(pis.Data, pis.encode(), verbose=True)
 				#print '%s\n%s' % (pis.Data.encode('hex'), pis.encode().encode('hex'))
-				print '----'
+				print('----')
 
 
 	def encode(self):
@@ -549,14 +547,14 @@ def cmp(s1, s2, comparelen=None, verbose=False):
 
 	if s1[:comparelen] == s2[:comparelen]:
 		if verbose:
-			print 'SAME %i %i' % (len(s1), len(s2))
+			print('SAME %i %i' % (len(s1), len(s2)))
 		return True
 	else:
 		if verbose:
-			print 'NOT SAME'
-			print s1[:comparelen].encode('hex')
-			print
-			print s2[:comparelen].encode('hex')
+			print('NOT SAME')
+			print(s1[:comparelen].encode('hex'))
+			print()
+			print(s2[:comparelen].encode('hex'))
 		return False
 
 
@@ -579,9 +577,9 @@ def main():
 	a = a.decode('hex')
 
 	p = PAC(a)
-	print p.PacLoginInfo.GroupRid
+	print(p.PacLoginInfo.GroupRid)
 	p.PacLoginInfo.GroupRid = 77
-	print p.PacLoginInfo.GroupRid
+	print(p.PacLoginInfo.GroupRid)
 	#print p
 
 
@@ -589,7 +587,7 @@ def main():
 
 	#cmp(a, p2, None, True)
 
-	print a == p2
+	print(a == p2)
 
 
 
