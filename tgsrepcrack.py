@@ -43,9 +43,9 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Read kerberos ticket then modify it')
 	parser.add_argument('wordlistfile', action='store',
-					metavar='dictionary.txt', type=file, # windows closes it in thread
+					metavar='dictionary.txt', type=argparse.FileType('r'), # windows closes it in thread
 					help='the word list to use with password cracking')
-	parser.add_argument('files', nargs='+', metavar='file.kirbi',
+	parser.add_argument('files', nargs='+', metavar='file.kirbi', type=argparse.FileType('r'),
 					help='File name to crack. Use asterisk \'*\' for many files.\n Files are exported with mimikatz or from extracttgsrepfrompcap.py')
 	parser.add_argument('-t', '--threads', dest='threads', action='store', required=False, 
 					metavar='NUM', type=int, default=5,
