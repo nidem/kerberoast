@@ -33,17 +33,17 @@ def rc4crypt(key, data):
     x = 0
     box = list(range(256))
     for i in range(256):
-        x = (x + box[i] + ord(key[i % len(key)])) % 256
+        x = (x + box[i] + (key[i % len(key)])) % 256
         box[i], box[x] = box[x], box[i]
     x = 0
     y = 0
-    out = []
+    out = b''
     for char in data:
         x = (x + 1) % 256
         y = (y + box[x]) % 256
         box[x], box[y] = box[y], box[x]
-        out.append(chr(ord(char) ^ box[(box[x] + box[y]) % 256]))
-    return ''.join(out)
+        out += bytes([char ^ box[(box[x] + box[y]) % 256]])
+    return out
 
 
 
@@ -62,7 +62,8 @@ def decrypt(key, messagetype, edata):
     #    }else{ 
     #        HMAC (K, &T, 4, K1); 
     #    } 
-    K1 = hmac.new(key, chr(messagetype) + "\x00\x00\x00", hashlib.md5).digest() # \x0b = 11
+    #K1 = hmac.new(key, chr(messagetype) + "\x00\x00\x00", hashlib.md5).digest() # \x0b = 11
+    K1 = hmac.new(key, bytes([messagetype]) + b"\x00\x00\x00", hashlib.md5).digest() # \x0b = 11
     #    memcpy (K2, K1, 16); 
     K2 = K1
 

