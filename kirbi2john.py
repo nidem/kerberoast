@@ -39,16 +39,16 @@ if __name__ == '__main__':
 				data = fd.read()
 			#data = open('f.read()
 
-			if data[0] == '\x76':
+			if data[0] == 0x76:
 				# rem dump
 				enctickets.append((str(decoder.decode(data)[0][2][0][3][2]), i, f))
 				i += 1
-			elif data[:2] == '6d':
+			elif data[:2] == b'6d':
 				for ticket in data.strip().split('\n'):
 					enctickets.append((str(decoder.decode(ticket.decode('hex'))[0][4][3][2]), i, f))
 					i += 1
 
 	out=open("crack_file","wb")
 	for et in enctickets:
-		out.write("$krb5tgs$" + et[2] + ":"+et[0][:16].encode("hex")+"$"+et[0][16:].encode("hex")+"\n")
+		out.write(("$krb5tgs$" + et[2] + ":"+et[0][:16].encode().hex()+"$"+et[0][16:].encode().hex()+"\n").encode())
 	out.close
