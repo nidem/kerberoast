@@ -179,3 +179,18 @@ def printdecode(kerbpayload, ktype=2):
     elif ktype == 2:
         print("a")
 
+def extract_ticket_from_kirbi(filename):
+    with open(filename, 'rb') as fd:
+        data = fd.read()
+        return extract_ticket(data)
+
+def extract_ticket(data):
+    if data[0] == 0x76:
+        # ram dump 
+        #enctickets.append(((decoder.decode(data)[0][2][0][3][2]).asOctets(), i, f))
+        return (decoder.decode(data)[0][2][0][3][2]).asOctets()
+    elif data[:2] == b'6d':
+        # honestly, i completely forgot. I think this is from a pcap -Tim
+        #enctickets.append(((decoder.decode(ticket.decode('hex'))[0][4][3][2]).asOctets(), i, f))
+        return (decoder.decode(ticket.decode('hex'))[0][4][3][2]).asOctets()
+

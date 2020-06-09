@@ -8,8 +8,6 @@ def crack(wordlist, enctickets):
 	toremove = []
 	while enctickets:
 		word = wordlist.get()
-		if word == 'ENDOFQUEUEENDOFQUEUEENDOFQUEUE':
-			break
 		#print "trying %s" % word
 		for et in enctickets:
 			kdata, nonce = kerberos.decrypt(kerberos.ntlmhash(word), 2, et[0])
@@ -23,7 +21,6 @@ def crack(wordlist, enctickets):
 				return
 			if not enctickets:
 				return
-
 
 print('''
 
@@ -48,20 +45,9 @@ args = parser.parse_args()
 enctickets = []
 i = 0
 for path in args.files:
-	for f in glob.glob(path):
-		with open(f, 'rb') as fd:
-			data = fd.read()
-		#data = open('f.read()
-
-		if data[0] == 0x76:
-			# rem dump 
-			#enctickets.append((str(decoder.decode(data)[0][2][0][3][2]), i, f))
-			enctickets.append(((decoder.decode(data)[0][2][0][3][2]).asOctets(), i, f))
-			i += 1
-		elif data[:2] == '6d':
-			for ticket in data.strip().split('\n'):
-				enctickets.append(((decoder.decode(ticket.decode('hex'))[0][4][3][2]).asOctets(), i, f))
-				i += 1
+	for filename in glob.glob(path):
+		et = kerberos.extract_ticket_from_kirbi(filename)
+		enctickets.append((et, i, filename))
 
 if len(enctickets):
 	print("Cracking %i tickets..." % len(enctickets))

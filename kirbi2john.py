@@ -17,38 +17,35 @@
 # limitations under the License
 
 from pyasn1.codec.ber import encoder, decoder
-from multiprocessing import JoinableQueue, Manager
 import glob
+import kerberos
+
 
 if __name__ == '__main__':
 	import argparse
+	import sys
 
 	parser = argparse.ArgumentParser(description='Read Mimikatz kerberos ticket then modify it and save it in crack_file')
-	parser.add_argument('files', nargs='+', metavar='file.kirbi',
+	parser.add_argument('-o', dest='crack_file', metavar='crack_file', type=argparse.FileType('w'), default=sys.stdout, nargs='?',
+					help='File to save crackable output to (default is stdout')
+	parser.add_argument('files', nargs='+', metavar='file.kirbi', type=str,
 					help='File name to crack. Use asterisk \'*\' for many files.\n Files are exported with mimikatz or from extracttgsrepfrompcap.py')
 
 	args = parser.parse_args()
 
-	manager = Manager()
-	enctickets = manager.list()
+	enctickets = []
 
-	i = 0
 	for path in args.files:
-		for f in glob.glob(path):
-			with open(f, 'rb') as fd:
-				data = fd.read()
-			#data = open('f.read()
+		for filename in glob.glob(path):
+			et = kerberos.extract_ticket_from_kirbi(filename)
+			if et:
+				enctickets.append((et,filename))
 
-			if data[0] == 0x76:
-				# rem dump
-				enctickets.append((str(decoder.decode(data)[0][2][0][3][2]), i, f))
-				i += 1
-			elif data[:2] == b'6d':
-				for ticket in data.strip().split('\n'):
-					enctickets.append((str(decoder.decode(ticket.decode('hex'))[0][4][3][2]), i, f))
-					i += 1
-
-	out=open("crack_file","wb")
+	#out=open("crack_file","wb")
 	for et in enctickets:
-		out.write(("$krb5tgs$" + et[2] + ":"+et[0][:16].encode().hex()+"$"+et[0][16:].encode().hex()+"\n").encode())
-	out.close
+		filename = et[1].split('/')[-1].split('\\')[-1].replace('.kirbi','')
+
+		out = '$krb5tgs$23$*' + filename + '*$' + et[0][:16].hex() + '$' +et[0][16:].hex() + '\n'
+
+		args.crack_file.writelines(out)
+	sys.stderr.write('tickets written: ' + str(len(enctickets)) + '\n')
