@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -tt
+#!/usr/bin/env python3
 # Based on the Kerberoast script from Tim Medin to extract the Kerberos tickets
 # from a kirbi file.
 # Modification to parse them into the JTR-format by Michael Kramer (SySS GmbH)
