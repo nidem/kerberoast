@@ -57,7 +57,7 @@ else:
 
 # load wordlist
 for w in args.wordlistfile:
-	word = w.decode('utf-8').strip()
+	word = w.decode('utf-8','ignore').strip()
 	hash = kerberos.ntlmhash(word)
 	for et in enctickets:
 		kdata, nonce = kerberos.decrypt(hash, 2, et[0])
