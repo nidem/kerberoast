@@ -105,7 +105,7 @@ def encrypt(key, messagetype, data, nonce):
     #  }else{ 
     #      HMAC (K, &T, 4, K1); 
     #  }
-    K1 = hmac.new(key, chr(messagetype) + "\x00\x00\x00", hashlib.md5).digest() # \x0b = 11
+    K1 = hmac.new(key, bytes(messagetype) + b'\x00\x00\x00', hashlib.md5).digest() # \x0b = 11
     #  memcpy (K2, K1, 16);
     K2 = K1 
     #  if (fRC4_EXP) memset (K1+7, 0xAB, 9); 
@@ -126,7 +126,7 @@ def encrypt(key, messagetype, data, nonce):
     return checksum + edata
 
 def zerosigs(data):
-    d = list(map(ord, data))
+    d = list(map(ord, str(data)))
     for i in range(5, 21): # zero out the 16 char sig, KDC
         d[len(d) - i] = 0
     for i in range(29, 45): # zero out the 16 char sig, Server
@@ -136,7 +136,7 @@ def zerosigs(data):
     #print retval.encode('hex')
 
 
-    return retval
+    return bytearray(retval,"utf-8")
 
 def chksum(K, T, data):
     data = zerosigs(data)
@@ -145,7 +145,7 @@ def chksum(K, T, data):
     #T = the message type, encoded as a little-endian four-byte integer
 
     #Ksign = HMAC(K, "signaturekey")  //includes zero octet at end
-    SIGNATUREKEY = 'signaturekey\x00'
+    SIGNATUREKEY = b'signaturekey\x00'
     Ksign = hmac.new(K, SIGNATUREKEY, hashlib.md5).digest()
     #tmp = MD5(concat(T, data))
     tmp = hashlib.md5(T + data).digest()
