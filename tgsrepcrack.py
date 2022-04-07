@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -tt
+#!/usr/bin/env -S python3 -tt
 
 import kerberos
 from pyasn1.codec.ber import encoder, decoder

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -tt
+#!/usr/bin/env -S python3 -tt
 
 import hashlib
 import hmac
@@ -64,7 +64,7 @@ def decrypt(key, messagetype, edata):
     #    } 
     #K1 = hmac.new(key, chr(messagetype) + "\x00\x00\x00", hashlib.md5).digest() # \x0b = 11
     K1 = hmac.new(key, bytes([messagetype]) + b"\x00\x00\x00", hashlib.md5).digest() # \x0b = 11
-    #    memcpy (K2, K1, 16); 
+    #i    memcpy (K2, K1, 16); 
     K2 = K1
 
     #    if (fRC4_EXP) memset (K1+7, 0xAB, 9); 
@@ -105,7 +105,7 @@ def encrypt(key, messagetype, data, nonce):
     #  }else{ 
     #      HMAC (K, &T, 4, K1); 
     #  }
-    K1 = hmac.new(key, chr(messagetype) + "\x00\x00\x00", hashlib.md5).digest() # \x0b = 11
+    K1 = hmac.new(key, bytes([messagetype]) + b"\x00\x00\x00", hashlib.md5).digest() # \x0b = 11
     #  memcpy (K2, K1, 16);
     K2 = K1 
     #  if (fRC4_EXP) memset (K1+7, 0xAB, 9); 
@@ -145,10 +145,10 @@ def chksum(K, T, data):
     #T = the message type, encoded as a little-endian four-byte integer
 
     #Ksign = HMAC(K, "signaturekey")  //includes zero octet at end
-    SIGNATUREKEY = 'signaturekey\x00'
+    SIGNATUREKEY = 'signaturekey\x00'.encode('latin-1')
     Ksign = hmac.new(K, SIGNATUREKEY, hashlib.md5).digest()
     #tmp = MD5(concat(T, data))
-    tmp = hashlib.md5(T + data).digest()
+    tmp = hashlib.md5((T + data).encode('latin-1')).digest()
     #CHKSUM = HMAC(Ksign, tmp)
     chksum = hmac.new(Ksign, tmp, hashlib.md5).digest()
     return chksum

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -tt
+#!/usr/bin/env -S python3 -tt
 
 from scapy.all import *
 import struct
