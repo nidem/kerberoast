@@ -7,7 +7,7 @@ MESSAGETYPEOFFSETUDP = 17
 MESSAGETYPEOFFSETTCP = 21
 DEBUG = True
 
-TGS_REP = chr(13)
+TGS_REP = 13
 
 def findkerbpayloads(packets, verbose=False):
 	kploads = []
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 	else:
 		print('writing %i hex encoded payloads to %s' % (len(kploads), args.outfile.name))
 	for p in kploads:
-		args.outfile.write(p.encode('hex') + '\n')
+		args.outfile.write(p.hex() + '\n')
 
 	
 

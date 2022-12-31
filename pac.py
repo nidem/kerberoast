@@ -25,7 +25,7 @@ def BytesToTime(b):
 
 def TimeToBytes(time):
 	if time == None:
-		return '\xff\xff\xff\xff\xff\xff\xff\x7f' # 0x7fffffffffffffff LE
+		return b'\xff\xff\xff\xff\xff\xff\xff\x7f' # 0x7fffffffffffffff LE
 	else:
 		td = time - datetime.datetime(1601,1,1)
 		#seconds = math.floor(td.total_seconds())
@@ -66,7 +66,11 @@ def PrettyTime(time):
 		return str(time)
 
 def AlignedString(s, alignment = 4):
-	return s + '\x00' * ((alignment - (len(s) % alignment)) % alignment)
+	if type(s)==str:
+		return bytearray(s,"utf-8") + b'\x00' * ((alignment - (len(s) % alignment)) % alignment)
+	else:
+		return s + b'\x00' * ((alignment - (len(s) % alignment)) % alignment)
+
 
 
 class datetimenano(datetime.datetime):
@@ -115,7 +119,7 @@ class PacInfoStructure(object, metaclass=ABCMeta):
 			self.Data = pac[self.Offset:self.Offset+self.BufferSize]
 
 	def __str__(self):
-		return '%s (%i) Size: %i  Offset: %i\nData: %s' % (self.PrettyName, self.Type, self.BufferSize, self.Offset, self.Data.encode('hex'))
+		return '%s (%i) Size: %i  Offset: %i\nData: %s' % (self.PrettyName, self.Type, self.BufferSize, self.Offset, self.Data.hex())
 
 	#def encode(self):
 	#	e = str(struct.pack('<III', self.Type, self.BufferSize, self.Offset)) + self.encode()
@@ -311,12 +315,12 @@ class PacLoginInfo(PacInfoStructure):
 		# TODO: Decode and re-encode this
 		e += self.extrajunk
 
-		e +=struct.pack('<LLL', len(self.AccountName)/2, 0, len(self.AccountName)/2) + AlignedString(self.AccountName) + \
-			struct.pack('<LLL', len(self.DisplayName)/2, 0, len(self.DisplayName)/2) + AlignedString(self.DisplayName) + \
-			struct.pack('<LLL', len(self.LogonScript)/2, 0, len(self.LogonScript)/2) + AlignedString(self.LogonScript) + \
-			struct.pack('<LLL', len(self.ProfilePath)/2, 0, len(self.ProfilePath)/2) + AlignedString(self.ProfilePath) + \
-			struct.pack('<LLL', len(self.HomeDir)/2,     0, len(self.HomeDir)/2)     + AlignedString(self.HomeDir)     + \
-			struct.pack('<LLL', len(self.DirDrive)/2,    0, len(self.DirDrive)/2)    + AlignedString(self.DirDrive)
+		e +=struct.pack('<LLL', int(len(self.AccountName)/2), 0, int(len(self.AccountName)/2)) + AlignedString(self.AccountName) + \
+			struct.pack('<LLL', int(len(self.DisplayName)/2), 0, int(len(self.DisplayName)/2)) + AlignedString(self.DisplayName) + \
+			struct.pack('<LLL', int(len(self.LogonScript)/2), 0, int(len(self.LogonScript)/2)) + AlignedString(self.LogonScript) + \
+			struct.pack('<LLL', int(len(self.ProfilePath)/2), 0, int(len(self.ProfilePath)/2)) + AlignedString(self.ProfilePath) + \
+			struct.pack('<LLL', int(len(self.HomeDir)/2),     0, int(len(self.HomeDir)/2))     + AlignedString(self.HomeDir)     + \
+			struct.pack('<LLL', int(len(self.DirDrive)/2),    0, int(len(self.DirDrive)/2))    + AlignedString(self.DirDrive)
 
 		# Groups
 		e += struct.pack('<L', len(self.Groups))
@@ -347,14 +351,14 @@ class PacClientInfo(PacInfoStructure):
 
 		self.ClientID = BytesToTime(self.Data[:8])
 		namelen = struct.unpack('<H', self.Data[8:10])[0]
-		self.Name = self.Data[10:10+namelen].encode('utf-8')
+		self.Name = self.Data[10:10+namelen].decode('utf-8')
 
 
 	def __str__(self):
 		return '%s (%i) ClientID: %s  Name (%i): %s' % (self.PrettyName, self.Type, str(self.ClientID), len(self.Name), self.Name)
 
 	def encode(self):			
-		return TimeToBytes(self.ClientID) + struct.pack('<H', len(self.Name)) + self.Name
+		return TimeToBytes(self.ClientID) + struct.pack('<H', len(self.Name)) + bytearray(self.Name,"utf-8")
 
 class PacUpnDnsInfo(PacInfoStructure):
 	Type = 12
@@ -392,7 +396,7 @@ class PacUpnDnsInfo(PacInfoStructure):
 			len(self.DNSName), \
 			# DNS Offset \
 			20+len(AlignedString(self.UPNName))) + \
-			self.Flags + '\x00\x00\x00\x00' + str(AlignedString(self.UPNName)) + '\x00\x00\x00\x00' + str(AlignedString(self.DNSName))
+			self.Flags + b'\x00\x00\x00\x00' + AlignedString(self.UPNName) + b'\x00\x00\x00\x00' + AlignedString(self.DNSName)
 
 class PacServerChecksum(PacInfoStructure):
 	Type = 6
@@ -408,7 +412,7 @@ class PacServerChecksum(PacInfoStructure):
 		self.SigVal = self.Data[4:]
 
 	def __str__(self):
-		return '%s (%i) Size: %i  Sig Type: %i  SigVal: %s' % (self.PrettyName, self.Type, len(self.encode()), self.SigType, self.SigVal.encode('hex'))
+		return '%s (%i) Size: %i  Sig Type: %i  SigVal: %s' % (self.PrettyName, self.Type, len(self.encode()), self.SigType, self.SigVal.hex())
 
 	def encode(self):
 		#return self.Data
@@ -428,7 +432,7 @@ class PacKdcChecksum(PacInfoStructure):
 		self.SigVal = self.Data[4:]
 
 	def __str__(self):
-		return '%s (%i) Size: %i  Sig Type: %i  SigVal: %s' % (self.PrettyName, self.Type, len(self.encode()), self.SigType, self.SigVal.encode('hex'))
+		return '%s (%i) Size: %i  Sig Type: %i  SigVal: %s' % (self.PrettyName, self.Type, len(self.encode()), self.SigType, self.SigVal.hex())
 
 	def encode(self):
 		#return self.Data
@@ -518,8 +522,8 @@ class PAC(object):
 		offset = 88
 		alignedoffset = 88
 
-		headers = ''
-		payload = ''
+		headers = b''
+		payload = b''
 
 		pacstructs = [self.PacLoginInfo, self.PacClientInfo, self.PacUpnDnsInfo, self.PacServerChecksum, self.PacKdcChecksum]
 
@@ -574,9 +578,9 @@ def main():
 	# ram
 	a = '050000000000000001000000b001000058000000000000000a0000000e00000008020000000000000c000000480000001802000000000000060000001400000060020000000000000700000014000000780200000000000001100800cccccccca001000000000000000002005ee808c4fecdcf01ffffffffffffff7fffffffffffffff7f1ac0dc109ec6cf011a80463b67c7cf01ffffffffffffff7f04000400040002000400040008000200000000000c000200000000001000020000000000140002000000000018000200b30000005204000001020000010000001c000200200000000000000000000000000000000000000008000a00200002000a000c00240002002800020000000000000000001002000000000000000000000000000000000000000000000000000000000000010000002c00020000000000000000000000000002000000000000000200000074006d0002000000000000000200000074006d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000010200000700000005000000000000000400000044004300300031000600000000000000050000004d004500440049004e00000004000000010400000000000515000000bffab31eb43b681af8cdadb10100000030000200070000000100000001010000000000120100000000000000800eafcefecdcf01040074006d0000001c00100016003000010000000000000074006d0040006d006500640069006e002e006c006f00630061006c00000000004d004500440049004e002e004c004f00430041004c00000076ffffffce1884addcbeade3e2eb24d9920a294f0000000076ffffff6cb8692b47afb295b541b4fe9a0a058c00000000'
 
-	a = a.decode('hex')
+	a = bytearray.fromhex(a)
 
-	p = PAC(a)
+	p = PAC(pac=a)
 	print(p.PacLoginInfo.GroupRid)
 	p.PacLoginInfo.GroupRid = 77
 	print(p.PacLoginInfo.GroupRid)

