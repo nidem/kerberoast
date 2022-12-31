@@ -97,9 +97,6 @@ def getpac(key, rawticket, debug=False, verbose=False):
 
 	
 	decserverticket, extra = decoder.decode(decserverticketraw)
-	# have two here because I was using one to verify that the rewrite matched
-	# This stuff should be removed, if it is still here Tim forgot...again
-	origdecserverticket, extra = decoder.decode(decserverticketraw)
 
 	# change the validity times in the server ticket
 	updatetimestampsserverticket(decserverticket, str(decserverticket[5]), str(decserverticket[6]), str(decserverticket[7]), str(decserverticket[8]))
@@ -133,10 +130,6 @@ def updatepac(key, rawticket, pac, debug=False, verbose=False):
 	#for i in range(len(decserverticket[3])):
 	#	print '---%i---' % i
 	#	print decserverticket[3][i]
-
-	# have two here because I was using one to verify that the rewrite matched
-	# This stuff should be removed, if it is still here Tim forgot...again
-	origdecserverticket, extra = decoder.decode(decserverticketraw)
 
 	# change the validity times in the server ticket
 	updatetimestampsserverticket(decserverticket, str(decserverticket[5]), str(decserverticket[6]), str(decserverticket[7]), str(decserverticket[8]))
